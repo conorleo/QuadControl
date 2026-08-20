@@ -1,0 +1,12 @@
+*.bin
+*.libs
+*.json
+*.xml
+*.mat
+*.fmu
+*.exe
+*.bat
+*.log
+*.makefile
+*.intdata
+*.realdata
