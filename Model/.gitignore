@@ -2,6 +2,7 @@
 *.libs
 *.json
 *.xml
+!modelDescription.xml
 *.mat
 *.fmu
 *.exe
