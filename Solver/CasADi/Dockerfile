@@ -34,3 +34,16 @@ RUN mkdir build && cd build && \
     make && \
     make install && \
     ldconfig
+
+# ------------------------------------------------------------
+# BVP
+# ------------------------------------------------------------
+RUN git clone https://github.com/conorleo/QuadControl.git -b main control
+WORKDIR /usr/src/control
+
+RUN mkdir build && cd build && \
+    cmake .. && \
+    make
+
+WORKDIR /usr/src/control/build
+# RUN ./multipleShooting
