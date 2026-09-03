@@ -7,9 +7,16 @@ Cosim/extract_fmu "Model/Quadcopter_fmu.zip" "Model"
 
 to unzip the fmu .zip file.
 
-## Run in Cosim
+## Run in Cosim (internal solver)
 1) Run
 g++ -std=c++17 -o Cosim/step_fmu Cosim/step_fmu.cpp
 Cosim/step_fmu
 
 to step the model using the fmu's internal solver.
+
+## Run in Model Exchange (external solver)
+1) Run
+g++ -std=c++17 -o ME/step_fmu ME/step_fmu.cpp
+ME/step_fmu
+
+to step the model using external euler forward solver.
