@@ -1,6 +1,11 @@
 #pragma once
+
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 #include <cstdarg>
 #include <cmath>
@@ -14,6 +19,57 @@
 #include <vector>
 
 namespace fs = std::filesystem;
+
+#ifdef _WIN32
+using DynamicLibrary = HMODULE;
+#else
+using DynamicLibrary = void*;
+#endif
+
+static std::string platformLibraryName() {
+#ifdef _WIN32
+  return "Quadcopter.dll";
+#else
+  return "Quadcopter.so";
+#endif
+}
+
+static std::string platformLibraryDir() {
+#ifdef _WIN32
+  return "win64";
+#else
+  return "linux64";
+#endif
+}
+
+static DynamicLibrary loadDynamicLibrary(const fs::path& path) {
+#ifdef _WIN32
+  return LoadLibraryW(path.wstring().c_str());
+#else
+  return dlopen(path.string().c_str(), RTLD_LAZY);
+#endif
+}
+
+static void unloadDynamicLibrary(DynamicLibrary dll) {
+#ifdef _WIN32
+  if (dll) {
+    FreeLibrary(dll);
+  }
+#else
+  if (dll) {
+    dlclose(dll);
+  }
+#endif
+}
+
+static std::string lastLibraryError() {
+#ifdef _WIN32
+  return std::to_string(GetLastError());
+#else
+  const char* err = dlerror();
+  return err ? err : "unknown";
+#endif
+}
 
 // --- FMI 2.0 types (shared) ---
 using fmi2Component = void*;
@@ -125,10 +181,19 @@ static void check(fmi2Status status, const char* what) {
 }
 
 template <typename T>
-static T loadSym(HMODULE dll, const char* name) {
+static T loadSym(DynamicLibrary dll, const char* name) {
+#ifdef _WIN32
   auto fn = reinterpret_cast<T>(GetProcAddress(dll, name));
+#else
+  dlerror();
+  auto fn = reinterpret_cast<T>(dlsym(dll, name));
+#endif
   if (!fn) {
-    std::cerr << "Missing FMI symbol: " << name << "\n";
+    std::cerr << "Missing FMI symbol: " << name;
+#ifndef _WIN32
+    std::cerr << " (" << lastLibraryError() << ")";
+#endif
+    std::cerr << "\n";
     std::exit(1);
   }
   return fn;
@@ -152,20 +217,24 @@ static fs::path findUnzippedFmu(int argc, char** argv) {
   candidates.push_back(here / "Model");
   candidates.push_back(here / ".." / "Model");
 
+  const std::string libDir = platformLibraryDir();
+  const std::string libName = platformLibraryName();
+
   for (auto& c : candidates) {
     std::error_code ec;
-    if (fs::exists(c / "binaries" / "win64" / "Quadcopter.dll", ec) &&
+    if (fs::exists(c / "binaries" / libDir / libName, ec) &&
         fs::exists(c / "modelDescription.xml", ec)) {
       return fs::absolute(c);
     }
   }
-  std::cerr << "Could not find unzipped FMU (need binaries/win64/Quadcopter.dll).\n"
+  std::cerr << "Could not find unzipped FMU (need binaries/" << libDir << "/" << libName
+            << ").\n"
             << "Pass the unzipped FMU directory as argv[1], or run from the repo root.\n";
   std::exit(1);
 }
 
 struct FMU {
-  HMODULE dll = nullptr;
+  DynamicLibrary dll = nullptr;
   fmi2Component c = nullptr;
   // function pointers
   fmi2FreeInstanceTYPE fmi2FreeInstance = nullptr;
@@ -184,16 +253,16 @@ static FMU Initialise(int argc, char** argv, fmi2Type type, fmi2Real tStart, fmi
                       std::size_t nThrust, const fmi2Real* thrusts) {
   FMU fm;
   const fs::path fmuDir = findUnzippedFmu(argc, argv);
-  const fs::path dllPath = fmuDir / "binaries" / "win64" / "Quadcopter.dll";
+  const fs::path dllPath = fmuDir / "binaries" / platformLibraryDir() / platformLibraryName();
   const std::string resourceUri = toFileUri(fmuDir / "resources");
 
   std::cout << "FMU dir: " << fmuDir.string() << "\n";
   std::cout << "resourceLocation: " << resourceUri << "\n";
 
-  fm.dll = LoadLibraryW(dllPath.wstring().c_str());
+  fm.dll = loadDynamicLibrary(dllPath);
   if (!fm.dll) {
-    std::cerr << "LoadLibrary failed for " << dllPath.string() << " (error " << GetLastError()
-              << ")\n";
+    std::cerr << "LoadLibrary failed for " << dllPath.string() << " (error "
+              << lastLibraryError() << ")\n";
     std::exit(1);
   }
 
@@ -280,7 +349,7 @@ static void Terminate(FMU& fm) {
   check(fm.fmi2Terminate(fm.c), "fmi2Terminate");
   fm.fmi2FreeInstance(fm.c);
   if (fm.dll) {
-    FreeLibrary(fm.dll);
+    unloadDynamicLibrary(fm.dll);
     fm.dll = nullptr;
   }
 }
