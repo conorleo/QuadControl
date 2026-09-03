@@ -38,6 +38,8 @@ RUN mkdir build && cd build && \
 # ------------------------------------------------------------
 # BVP
 # ------------------------------------------------------------
+
+WORKDIR /usr/src
 RUN git clone https://github.com/conorleo/QuadControl.git -b main control
 WORKDIR /usr/src/control
 
