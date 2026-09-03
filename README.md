@@ -20,3 +20,10 @@ g++ -std=c++17 -o IVP/ME/step_fmu ME/step_fmu.cpp
 IVP/ME/step_fmu
 
 to step the model using external euler forward solver.
+
+## Run Multiple Shooting
+1) NOTE: Uses CasADi to construct and solve the NLP (runs on linux).
+Run Shell
+cd Solver/CasADi
+docker build -t casadi .
+docker run --rm -it casadi bash
