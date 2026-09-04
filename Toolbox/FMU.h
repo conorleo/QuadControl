@@ -42,6 +42,14 @@ static std::string platformLibraryDir() {
 #endif
 }
 
+static const char* platformGUID() {
+#ifdef _WIN32
+  return "{200bdf00-574d-4c95-a530-761da4fc4aa5}";
+#else
+  return "{9127244d-11c7-48ed-ba25-62d3b36cd794}";
+#endif
+}
+
 static DynamicLibrary loadDynamicLibrary(const fs::path& path) {
 #ifdef _WIN32
   return LoadLibraryW(path.wstring().c_str());
@@ -137,7 +145,7 @@ using fmi2SetContinuousStatesTYPE = fmi2Status (*)(fmi2Component, const fmi2Real
 using fmi2GetDerivativesTYPE = fmi2Status (*)(fmi2Component, fmi2Real[], std::size_t);
 using fmi2DoStepTYPE = fmi2Status (*)(fmi2Component, fmi2Real, fmi2Real, fmi2Boolean);
 
-static const char* kGuid = "{200bdf00-574d-4c95-a530-761da4fc4aa5}";
+static const char* kGuid = platformGUID();
 static const char* kInstanceName = "Quadcopter";
 
 static const char* statusName(fmi2Status s) {
