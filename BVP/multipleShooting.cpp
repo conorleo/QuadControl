@@ -55,8 +55,6 @@ int main(int argc, char** argv) {
   auto theta_dot = X(10, all);
   auto psi_dot   = X(11, all);
 
-  auto velocity = sqrt(x_dot*x_dot + y_dot*y_dot + z_dot*z_dot);
-
   casadi::MX U = opti.variable(kNu, N); // control trajectory (throttle)
   casadi::MX T = opti.variable(); // final time
 
@@ -111,11 +109,15 @@ int main(int argc, char** argv) {
   opti.subject_to(x(0)==0);   // start at position 0 ...
   opti.subject_to(y(0)==0);
   opti.subject_to(z(0)==0);
-  opti.subject_to(velocity(0)==0); // ... from stand-still 
+  opti.subject_to(x_dot(0)==0); // ... from stand-still
+  opti.subject_to(y_dot(0)==0);
+  opti.subject_to(z_dot(0)==0);
   opti.subject_to(x(N)==1); // finish line at position 1
   opti.subject_to(y(N)==1);
   opti.subject_to(z(N)==1);
-  opti.subject_to(velocity(N)==0); // finish line at stand-still
+  opti.subject_to(x_dot(N)==0); // finish line at stand-still
+  opti.subject_to(y_dot(N)==0);
+  opti.subject_to(z_dot(N)==0);
 
   // ---- misc. constraints  ----------
   opti.subject_to(T>=0); // Time must be positive
