@@ -100,10 +100,10 @@ int main(int argc, char** argv) {
   }
 
   // ---- path constraints -----------
-  opti.subject_to(0<=U(0, all)<=1);           // control is limited
-  opti.subject_to(0<=U(1, all)<=1);
-  opti.subject_to(0<=U(2, all)<=1);
-  opti.subject_to(0<=U(3, all)<=1);
+  opti.subject_to(-1<=U(0, all)<=1);           // control is limited
+  opti.subject_to(-1<=U(1, all)<=1);
+  opti.subject_to(-1<=U(2, all)<=1);
+  opti.subject_to(-1<=U(3, all)<=1);
 
   // ---- boundary conditions --------
   opti.subject_to(x(0)==0);   // start at position 0 ...
