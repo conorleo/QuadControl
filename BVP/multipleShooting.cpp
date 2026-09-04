@@ -4,6 +4,7 @@
 #include "../Toolbox/FMU.h"
 #include <casadi/casadi.hpp>
 #include "../Toolbox/FMU_CasadiWrapper.hpp"
+#include "../Toolbox/FMU_CasadiCallback.hpp"
 
 // From modelDescription.xml (Quadcopter FMI 2.0)
 static const fmi2ValueReference kThrustVr[4] = {348, 349, 350, 351};
@@ -83,7 +84,8 @@ int main(int argc, char** argv) {
 
     // Evaluate FMU dynamics symbolically via the CasADi callback (numeric
     // FMU calls happen during solve, CasADi will finite-difference if needed).
-    std::vector<casadi::MX> fmu_out = fmu_func({x_k, u_k});
+    std::vector<casadi::MX> args{x_k, u_k};
+    std::vector<casadi::MX> fmu_out = fmu_func(args);
     derivatives = fmu_out[0];
 
     // advance symbolic time

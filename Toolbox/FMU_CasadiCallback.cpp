@@ -1,5 +1,6 @@
 #include "FMU_CasadiCallback.hpp"
 #include <algorithm>
+#include <stdexcept>
 
 FMU_CasadiCallback::FMU_CasadiCallback(int argc, char** argv, std::size_t nx, std::size_t nu,
                                        const fmi2ValueReference* thrustVr, std::size_t nThrust,

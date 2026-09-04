@@ -1,4 +1,5 @@
 #include "FMU_CasadiWrapper.hpp"
+#include <algorithm>
 #include <cstring>
 
 FMU_CasadiWrapper::FMU_CasadiWrapper(int argc, char** argv, fmi2Type type,
