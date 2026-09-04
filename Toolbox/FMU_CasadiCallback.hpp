@@ -11,8 +11,7 @@ class FMU_CasadiCallback : public casadi::Callback {
  public:
   FMU_CasadiCallback(int argc, char** argv, std::size_t nx, std::size_t nu,
                      const fmi2ValueReference* thrustVr = nullptr, std::size_t nThrust = 0,
-                     const fmi2ValueReference* bodyVr = nullptr, std::size_t nBody = 0,
-                     const std::string& name = "FMU_CasadiCallback");
+                     const fmi2ValueReference* bodyVr = nullptr, std::size_t nBody = 0);
 
   // Callback API: keep the names matching the installed CasADi version here.
   casadi_int get_n_in() const;

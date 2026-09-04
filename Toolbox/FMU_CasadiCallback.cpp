@@ -4,11 +4,10 @@
 
 FMU_CasadiCallback::FMU_CasadiCallback(int argc, char** argv, std::size_t nx, std::size_t nu,
                                        const fmi2ValueReference* thrustVr, std::size_t nThrust,
-                                       const fmi2ValueReference* bodyVr, std::size_t nBody,
-                                       const std::string& name)
-    : casadi::Callback(name), m_wrapper(std::make_shared<FMU_CasadiWrapper>(argc, argv, fmi2ModelExchange,
-                                                                             thrustVr, nThrust, nullptr,
-                                                                             bodyVr, nBody)),
+                                       const fmi2ValueReference* bodyVr, std::size_t nBody)
+    : casadi::Callback(), m_wrapper(std::make_shared<FMU_CasadiWrapper>(argc, argv, fmi2ModelExchange,
+                                                                         thrustVr, nThrust, nullptr,
+                                                                         bodyVr, nBody)),
       m_nx(nx), m_nu(nu) {}
 
 casadi_int FMU_CasadiCallback::get_n_in() const { return 2; }

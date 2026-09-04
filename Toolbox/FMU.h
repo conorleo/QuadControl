@@ -82,8 +82,8 @@ using fmi2Boolean = int;
 using fmi2Char = char;
 using fmi2String = const fmi2Char*;
 using fmi2Byte = char;
-using fmi2Type = enum { fmi2ModelExchange = 0, fmi2CoSimulation = 1 };
-using fmi2Status = enum {
+enum fmi2Type { fmi2ModelExchange = 0, fmi2CoSimulation = 1 };
+enum fmi2Status {
   fmi2OK = 0,
   fmi2Warning = 1,
   fmi2Discard = 2,
@@ -91,7 +91,7 @@ using fmi2Status = enum {
   fmi2Fatal = 4,
   fmi2Pending = 5
 };
-using fmi2StatusKind = enum {
+enum fmi2StatusKind {
   fmi2DoStepStatus = 0,
   fmi2PendingStatus = 1,
   fmi2LastSuccessfulTime = 2,
