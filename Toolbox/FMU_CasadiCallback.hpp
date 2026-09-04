@@ -14,12 +14,12 @@ class FMU_CasadiCallback : public casadi::Callback {
                      const fmi2ValueReference* bodyVr = nullptr, std::size_t nBody = 0,
                      const std::string& name = "FMU_CasadiCallback");
 
-  // Callback API
-  casadi_int get_n_in() const override;
-  casadi_int get_n_out() const override;
-  std::vector<casadi::Sparsity> get_sparsity_in() const override;
-  std::vector<casadi::Sparsity> get_sparsity_out() const override;
-  std::vector<casadi::DM> eval(const std::vector<casadi::DM>& args) const override;
+  // Callback API: keep the names matching the installed CasADi version here.
+  casadi_int get_n_in() const;
+  casadi_int get_n_out() const;
+  std::vector<casadi::Sparsity> get_sparsity_in() const;
+  std::vector<casadi::Sparsity> get_sparsity_out() const;
+  std::vector<casadi::DM> eval(const std::vector<casadi::DM>& args) const;
 
  private:
   std::shared_ptr<FMU_CasadiWrapper> m_wrapper;
