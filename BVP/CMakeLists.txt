@@ -79,8 +79,14 @@ include_directories(
 
 link_directories(${LIBRARY_DIRS})
 
-add_executable(multiple_shooting multipleShooting.cpp)
+add_executable(multiple_shooting multipleShooting.cpp
+        ${CMAKE_SOURCE_DIR}/Toolbox/FMU_CasadiWrapper.cpp
+        ${CMAKE_SOURCE_DIR}/Toolbox/FMU_CasadiCallback.cpp)
 target_link_libraries(multiple_shooting PRIVATE ${CASADI_LIBRARIES} Threads::Threads)
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(multiple_shooting PRIVATE dl)
+endif()
 
 if(MSVC)
   target_compile_options(multiple_shooting PRIVATE /W3)

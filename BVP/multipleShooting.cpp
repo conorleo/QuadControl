@@ -3,6 +3,7 @@
 
 #include "../Toolbox/FMU.h"
 #include <casadi/casadi.hpp>
+#include "../Toolbox/FMU_CasadiWrapper.hpp"
 
 // From modelDescription.xml (Quadcopter FMI 2.0)
 static const fmi2ValueReference kThrustVr[4] = {348, 349, 350, 351};
@@ -22,11 +23,10 @@ int main(int argc, char** argv) {
   constexpr std::size_t kNu = 4;
   constexpr std::size_t kNy = 3;
 //   fmi2Real states[kNx]{};
-  fmi2Real derivatives[kNx]{};
-//   check(fm.fmi2GetContinuousStates(fm.c, states, kNx), "fmi2GetContinuousStates");
+  // Use CasADi symbolic types for derivatives/time in the OCP build
+  casadi::MX derivatives = casadi::MX::zeros(kNx, 1);
 
-  fmi2Real Y[kNy]{};
-//   check(fm.fmi2GetReal(fm.c, kYVr, kNy, Y), "fmi2GetReal(body.r_0)");
+  // Observation Y from the FMU is represented by state slices (x,y,z)
 
   casadi::MX time = tStart;
 
@@ -62,17 +62,32 @@ int main(int argc, char** argv) {
 
   // ---- dynamic constraints --------
   casadi::MX dt = T / N;
+  // Example: create a numeric FMU wrapper to evaluate derivatives outside of
+  // the symbolic construction. This shows how to call the FMU numerically.
+  // Uncomment and adapt sizes if you want to run numeric evaluations here.
+  // FMU_CasadiWrapper fmuw(argc, argv, fmi2ModelExchange, kThrustVr, kNu, nullptr, kYVr, kNy);
+  // std::vector<double> x_num(kNx, 0.0), u_num(kNu, 0.0), dx_num(kNx);
+  // double t_num = 0.0;
+  // if (fmuw.eval(x_num, u_num, t_num, dx_num)) {
+  //   // dx_num now contains numeric derivatives from the FMU
+  // }
+  // Create a CasADi callback that wraps the FMU so we can use it symbolically.
+  auto fmu_cb = std::make_shared<FMU_CasadiCallback>(argc, argv, kNx, kNu, kThrustVr, kNu, kYVr, kNy);
+  casadi::Function fmu_func(fmu_cb);
+
   for (int k = 0; k < N; ++k) {
-    check(fm.fmi2SetReal(fm.c, kThrustVr, kNu, U(all,k)), "fmi2SetReal(thrust)");
+    // FMU numeric calls disabled while building the CasADi symbolic OCP.
+    // Extract symbolic state and control at node k and form symbolic derivatives.
+    casadi::MX u_k = U(all, k);
+    casadi::MX x_k = X(all, k);
 
-    check(fm.fmi2SetTime(fm.c, time), "fmi2SetTime");
-    check(fm.fmi2GetDerivatives(fm.c, derivatives, kNx), "fmi2GetDerivatives");
-    check(fm.fmi2SetContinuousStates(fm.c, X(all, k), kNx), "fmi2SetContinuousStates");
+    // Evaluate FMU dynamics symbolically via the CasADi callback (numeric
+    // FMU calls happen during solve, CasADi will finite-difference if needed).
+    std::vector<casadi::MX> fmu_out = fmu_func({x_k, u_k});
+    derivatives = fmu_out[0];
 
-    time += dt;
-    check(fm.fmi2SetTime(fm.c, time), "fmi2SetTime");
-
-    check(fm.fmi2GetReal(fm.c, kYVr, kNy, Y), "fmi2GetReal(body.r_0)");
+    // advance symbolic time
+    time = time + dt;
     // casadi::MX k1 = f(X(all,k),         U(all,k));
     // casadi::MX k2 = f(X(all,k)+dt/2*k1, U(all,k));
     // casadi::MX k3 = f(X(all,k)+dt/2*k2, U(all,k));
@@ -89,13 +104,13 @@ int main(int argc, char** argv) {
   opti.subject_to(0<=U(3, all)<=1);
 
   // ---- boundary conditions --------
-  opti.subject_to(Y(0,0)==0);   // start at position 0 ...
-  opti.subject_to(Y(1,0)==0);
-  opti.subject_to(Y(2,0)==0);
+  opti.subject_to(x(0)==0);   // start at position 0 ...
+  opti.subject_to(y(0)==0);
+  opti.subject_to(z(0)==0);
   opti.subject_to(velocity(0)==0); // ... from stand-still 
-  opti.subject_to(Y(0,N)==1); // finish line at position 1
-  opti.subject_to(Y(1,N)==1);
-  opti.subject_to(Y(2,N)==1);
+  opti.subject_to(x(N)==1); // finish line at position 1
+  opti.subject_to(y(N)==1);
+  opti.subject_to(z(N)==1);
   opti.subject_to(velocity(N)==0); // finish line at stand-still
 
   // ---- misc. constraints  ----------
