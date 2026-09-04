@@ -248,9 +248,10 @@ struct FMU {
   fmi2GetDerivativesTYPE fmi2GetDerivatives = nullptr;
 };
 
-static FMU Initialise(int argc, char** argv, fmi2Type type, fmi2Real tStart, fmi2Real tStop,
-                      fmi2Boolean loggingOn, const fmi2ValueReference* thrustVr,
-                      std::size_t nThrust, const fmi2Real* thrusts) {
+static FMU Initialise(int argc, char** argv, fmi2Type type, fmi2Real tStart,
+                      const fmi2Real* tStop, fmi2Boolean loggingOn,
+                      const fmi2ValueReference* thrustVr, std::size_t nThrust,
+                      const fmi2Real* thrusts) {
   FMU fm;
   const fs::path fmuDir = findUnzippedFmu(argc, argv);
   const fs::path dllPath = fmuDir / "binaries" / platformLibraryDir() / platformLibraryName();
@@ -300,8 +301,11 @@ static FMU Initialise(int argc, char** argv, fmi2Type type, fmi2Real tStart, fmi
     std::exit(1);
   }
 
-  check(fmi2SetupExperiment(fm.c, fmi2False, 0.0, tStart, fmi2True, tStop),
-        "fmi2SetupExperiment");
+    bool stopDefined = (tStop != nullptr);
+    fmi2Real tStopVal = stopDefined ? *tStop : 0.0;
+    check(fmi2SetupExperiment(fm.c, fmi2False, 0.0, tStart,
+             stopDefined ? fmi2True : fmi2False, tStopVal),
+      "fmi2SetupExperiment");
   check(fmi2EnterInitializationMode(fm.c), "fmi2EnterInitializationMode");
 
   if (thrustVr && thrusts && nThrust > 0) {

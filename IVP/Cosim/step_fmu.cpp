@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
                                : (argc > 1 && std::strcmp(argv[1], "--verbose") == 0) ? fmi2True
                                                                                      : fmi2False;
 
-  FMU fm = Initialise(argc, argv, fmi2CoSimulation, tStart, tStop, loggingOn, kThrustVr, 4,
+  FMU fm = Initialise(argc, argv, fmi2CoSimulation, tStart, &tStop, loggingOn, kThrustVr, 4,
                        thrusts);
 
   std::printf("%10s %12s %12s %12s\n", "t", "x", "y", "z");

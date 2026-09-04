@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
                                : (argc > 1 && std::strcmp(argv[1], "--verbose") == 0) ? fmi2True
                                                                                      : fmi2False;
 
-  FMU fm = Initialise(argc, argv, fmi2ModelExchange, tStart, tStop, loggingOn, kThrustVr, 4,
+  FMU fm = Initialise(argc, argv, fmi2ModelExchange, tStart, &tStop, loggingOn, kThrustVr, 4,
                        thrusts);
 
   constexpr std::size_t kNx = 12;

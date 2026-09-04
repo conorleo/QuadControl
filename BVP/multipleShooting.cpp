@@ -14,6 +14,8 @@ int main(int argc, char** argv) {
                                : (argc > 1 && std::strcmp(argv[1], "--verbose") == 0) ? fmi2True
                                                                                      : fmi2False;
 
+  const fmi2Real tStart = 0.0;
+  const fmi2Real* tStop = nullptr;
   FMU fm = Initialise(argc, argv, fmi2ModelExchange, tStart, tStop, loggingOn);
 
   constexpr std::size_t kNx = 12;
@@ -26,7 +28,7 @@ int main(int argc, char** argv) {
   fmi2Real Y[kNy]{};
 //   check(fm.fmi2GetReal(fm.c, kYVr, kNy, Y), "fmi2GetReal(body.r_0)");
 
-  fmi2Real time = tStart;
+  casadi::MX time = tStart;
 
   // ------------------------------ OCP -------------------------------
 
