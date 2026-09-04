@@ -120,9 +120,12 @@ int main(int argc, char** argv) {
   // ---- misc. constraints  ----------
   opti.subject_to(T>=0); // Time must be positive
 
-  // ---- initial values for solver ---
-  opti.set_initial(velocity, 1);
-  opti.set_initial(T, 1);
+  // CasADi only allows set_initial on actual decision variables (or simple
+  // mappings of them). `velocity` is an arbitrary expression, so initialize the
+  // underlying state/control variables instead of the derived expression.
+  opti.set_initial(X, casadi::DM::zeros(kNx, N + 1));
+  opti.set_initial(U, 0.5 * casadi::DM::ones(kNu, N));
+  opti.set_initial(T, 1.0);
 
   // ---- solve NLP              ------
   opti.solver("ipopt"); // set numerical backend
